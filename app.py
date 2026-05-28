@@ -121,13 +121,13 @@ def load_mobilenet_v3():
         x = data_augmentation(inputs)
         x = tf.keras.applications.mobilenet_v3.preprocess_input(x)
         x = base_model(x, training=False)
-        x = tf.keras.layers.GlobalAveragePooling2D()(x)
-        x = tf.keras.layers.Dense(128, activation='relu')(x)
+        x = tf.keras.layers.GlobalAveragePooling2D(name='global_average_pooling2d_1')(x)
+        x = tf.keras.layers.Dense(128, activation='relu', name='dense_2')(x)
         x = tf.keras.layers.Dropout(0.3)(x)
-        outputs = tf.keras.layers.Dense(3, activation='softmax')(x)
+        outputs = tf.keras.layers.Dense(3, activation='softmax', name='dense_3')(x)
         
-        model = tf.keras.Model(inputs, outputs)
-        model.load_weights("models/best_mobilenet_pisang.h5")
+        model = tf.keras.Model(inputs, outputs, name="MobileNetV3_Large")
+        model.load_weights("models/best_mobilenet_pisang.h5", by_name=True)
         return model, None
     except Exception as e:
         return None, str(e)
@@ -142,13 +142,13 @@ def load_convnext_tiny():
         x = data_augmentation(inputs)
         x = tf.keras.applications.convnext.preprocess_input(x)
         x = base_model(x, training=False)
-        x = tf.keras.layers.GlobalAveragePooling2D()(x)
-        x = tf.keras.layers.Dense(128, activation='relu')(x)
+        x = tf.keras.layers.GlobalAveragePooling2D(name='global_average_pooling2d')(x)
+        x = tf.keras.layers.Dense(128, activation='relu', name='dense')(x)
         x = tf.keras.layers.Dropout(0.3)(x)
-        outputs = tf.keras.layers.Dense(3, activation='softmax')(x)
+        outputs = tf.keras.layers.Dense(3, activation='softmax', name='dense_1')(x)
         
-        model = tf.keras.Model(inputs, outputs)
-        model.load_weights("models/best_convnext_pisang.h5")
+        model = tf.keras.Model(inputs, outputs, name="ConvNeXt_Tiny")
+        model.load_weights("models/best_convnext_pisang.h5", by_name=True)
         return model, None
     except Exception as e:
         return None, str(e)
