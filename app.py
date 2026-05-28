@@ -115,7 +115,7 @@ def get_augmentation_layer():
 def load_mobilenet_v3():
     try:
         data_augmentation = get_augmentation_layer()
-        base_model = tf.keras.applications.MobileNetV3Large(include_top=False, weights=None, input_shape=(224, 224, 3))
+        base_model = tf.keras.applications.MobileNetV3Large(include_top=False, weights='imagenet', input_shape=(224, 224, 3))
         
         inputs = tf.keras.Input(shape=(224, 224, 3))
         x = data_augmentation(inputs)
@@ -127,7 +127,7 @@ def load_mobilenet_v3():
         outputs = tf.keras.layers.Dense(3, activation='softmax', name='dense_3')(x)
         
         model = tf.keras.Model(inputs, outputs, name="MobileNetV3_Large")
-        model.load_weights("models/best_mobilenet_pisang.h5", by_name=True)
+        model.load_weights("models/best_mobilenet_pisang.h5", by_name=True, skip_mismatch=True)
         return model, None
     except Exception as e:
         return None, str(e)
@@ -136,7 +136,7 @@ def load_mobilenet_v3():
 def load_convnext_tiny():
     try:
         data_augmentation = get_augmentation_layer()
-        base_model = tf.keras.applications.ConvNeXtTiny(include_top=False, weights=None, input_shape=(224, 224, 3))
+        base_model = tf.keras.applications.ConvNeXtTiny(include_top=False, weights='imagenet', input_shape=(224, 224, 3))
         
         inputs = tf.keras.Input(shape=(224, 224, 3))
         x = data_augmentation(inputs)
@@ -148,7 +148,7 @@ def load_convnext_tiny():
         outputs = tf.keras.layers.Dense(3, activation='softmax', name='dense_1')(x)
         
         model = tf.keras.Model(inputs, outputs, name="ConvNeXt_Tiny")
-        model.load_weights("models/best_convnext_pisang.h5", by_name=True)
+        model.load_weights("models/best_convnext_pisang.h5", by_name=True, skip_mismatch=True)
         return model, None
     except Exception as e:
         return None, str(e)
