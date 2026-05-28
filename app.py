@@ -103,10 +103,31 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- FUNGSI PEMBUATAN ARSITEKTUR MODEL ---
+def get_augmentation_layer():
+    return tf.keras.Sequential([
+        tf.keras.layers.RandomFlip("horizontal_and_vertical"),
+        tf.keras.layers.RandomRotation(0.2),
+        tf.keras.layers.RandomZoom(0.2),
+        tf.keras.layers.RandomContrast(0.1)
+    ], name="Augmentasi_On_The_Fly")
+
 @st.cache_resource
 def load_mobilenet_v3():
     try:
-        model = tf.keras.models.load_model("models/best_mobilenet_pisang.h5", compile=False)
+        data_augmentation = get_augmentation_layer()
+        base_model = tf.keras.applications.MobileNetV3Large(include_top=False, weights=None, input_shape=(224, 224, 3))
+        
+        inputs = tf.keras.Input(shape=(224, 224, 3))
+        x = data_augmentation(inputs)
+        x = tf.keras.applications.mobilenet_v3.preprocess_input(x)
+        x = base_model(x, training=False)
+        x = tf.keras.layers.GlobalAveragePooling2D()(x)
+        x = tf.keras.layers.Dense(128, activation='relu')(x)
+        x = tf.keras.layers.Dropout(0.3)(x)
+        outputs = tf.keras.layers.Dense(3, activation='softmax')(x)
+        
+        model = tf.keras.Model(inputs, outputs)
+        model.load_weights("models/best_mobilenet_pisang.h5")
         return model, None
     except Exception as e:
         return None, str(e)
@@ -114,7 +135,20 @@ def load_mobilenet_v3():
 @st.cache_resource
 def load_convnext_tiny():
     try:
-        model = tf.keras.models.load_model("models/best_convnext_pisang.h5", compile=False)
+        data_augmentation = get_augmentation_layer()
+        base_model = tf.keras.applications.ConvNeXtTiny(include_top=False, weights=None, input_shape=(224, 224, 3))
+        
+        inputs = tf.keras.Input(shape=(224, 224, 3))
+        x = data_augmentation(inputs)
+        x = tf.keras.applications.convnext.preprocess_input(x)
+        x = base_model(x, training=False)
+        x = tf.keras.layers.GlobalAveragePooling2D()(x)
+        x = tf.keras.layers.Dense(128, activation='relu')(x)
+        x = tf.keras.layers.Dropout(0.3)(x)
+        outputs = tf.keras.layers.Dense(3, activation='softmax')(x)
+        
+        model = tf.keras.Model(inputs, outputs)
+        model.load_weights("models/best_convnext_pisang.h5")
         return model, None
     except Exception as e:
         return None, str(e)
