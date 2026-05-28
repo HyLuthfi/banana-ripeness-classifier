@@ -260,7 +260,9 @@ def tampilkan_gambar_visualisasi(nama_file, deskripsi):
     path_visual = f"Visualisasi/{nama_file}"
     if os.path.exists(path_visual):
         gambar = Image.open(path_visual)
-        st.image(gambar, caption=deskripsi, use_container_width=True)
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st.image(gambar, caption=deskripsi, use_container_width=True)
     else:
         st.info(f"Visualisasi {nama_file} belum tersedia.")
 
