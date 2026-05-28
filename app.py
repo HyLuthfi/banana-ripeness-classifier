@@ -86,18 +86,20 @@ css_kustom = """
     }
 
     .stButton > button {
-        background-color: #111827;
+        background: linear-gradient(135deg, #111827 0%, #374151 100%);
         color: white;
-        border-radius: 6px;
+        border-radius: 8px;
         padding: 0.75rem 2rem;
         font-weight: 600;
         border: none;
         width: 100%;
-        transition: all 0.3s;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
     
     .stButton > button:hover {
-        background-color: #374151;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         color: white;
     }
     
@@ -254,6 +256,14 @@ def format_hasil(class_name, confidence):
     else:
         return label, confidence, 'status-terlalu'
 
+def tampilkan_gambar_visualisasi(nama_file, deskripsi):
+    path_visual = f"Visualisasi/{nama_file}"
+    if os.path.exists(path_visual):
+        gambar = Image.open(path_visual)
+        st.image(gambar, caption=deskripsi, use_container_width=True)
+    else:
+        st.info(f"Visualisasi {nama_file} belum tersedia.")
+
 # HEADER
 st.markdown("<h1 style='text-align: center; margin-top: 1rem;'>Sistem Inspeksi Kematangan Pisang</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; font-size: 1.1rem; color: #6B7280; margin-bottom: 2rem;'>Sistem Otomatisasi Penilaian Kualitas Berbasis Deep Learning</p>", unsafe_allow_html=True)
@@ -287,7 +297,10 @@ with tab_prediksi:
                 citra_asli = Image.open(berkas_unggah).convert('RGB')
                 st.image(citra_asli, caption="Citra Sampel Terunggah", use_container_width=True)
                 st.markdown("<br>", unsafe_allow_html=True)
-                tombol_prediksi = st.button("Lakukan Inspeksi Paralel")
+                
+                col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
+                with col_btn2:
+                    tombol_prediksi = st.button("Lakukan Inspeksi Paralel", use_container_width=True)
 
         if berkas_unggah is not None and 'tombol_prediksi' in locals() and tombol_prediksi:
             st.markdown("<hr>", unsafe_allow_html=True)
@@ -383,6 +396,8 @@ with tab_convnext:
     st.markdown("""
     ConvNeXt adalah arsitektur pure-convolutional modern yang diadaptasi dengan strategi pelatihan Vision Transformers (ViT). Model ini mencapai akurasi uji sebesar **98%** dengan detail fitur ekstraksi yang mendalam.
     """)
+    st.markdown("<br>", unsafe_allow_html=True)
+    tampilkan_gambar_visualisasi("Confusion_ConvNeXt-TIny.png", "Grafik Pelatihan & Confusion Matrix ConvNeXt-Tiny")
     st.markdown("</div>", unsafe_allow_html=True)
 
 # --- TAB 4: MOBILENET ---
@@ -394,6 +409,8 @@ with tab_mobilenet:
     st.markdown("""
     MobileNetV3 dirancang khusus menggunakan teknik Hardware-Aware Network Architecture Search (NAS). Memiliki kecepatan inferensi ultra-cepat, model ini mempertahankan akurasi hingga **100%** di dataset uji.
     """)
+    st.markdown("<br>", unsafe_allow_html=True)
+    tampilkan_gambar_visualisasi("Confusion_MobileNetV3.png", "Grafik Pelatihan & Confusion Matrix MobileNetV3-Large")
     st.markdown("</div>", unsafe_allow_html=True)
 
 # --- TAB 5: KOMPARASI METRIK ---
@@ -405,4 +422,6 @@ with tab_komparasi:
     st.markdown("""
     Secara keseluruhan, **MobileNetV3-Large** menunjukkan performa yang sedikit lebih superior dengan waktu latensi yang lebih rendah, sementara **ConvNeXt-Tiny** memberikan kestabilan ekstraksi fitur untuk citra yang sangat kompleks.
     """)
+    st.markdown("<br>", unsafe_allow_html=True)
+    tampilkan_gambar_visualisasi("komparasi.png", "Perbandingan Metrik Kinerja Akhir (Accuracy, Precision, Recall, F1-Score)")
     st.markdown("</div>", unsafe_allow_html=True)
