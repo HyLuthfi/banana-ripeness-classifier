@@ -133,7 +133,7 @@ def inject_dense_weights(model, h5_path, expected_in):
         search_group(g)
         
     if kernel_1 is not None and bias_1 is not None:
-        model.layers[-2].set_weights([kernel_1, bias_1])
+        model.layers[-3].set_weights([kernel_1, bias_1])
     if kernel_2 is not None and bias_2 is not None:
         model.layers[-1].set_weights([kernel_2, bias_2])
 
