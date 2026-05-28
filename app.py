@@ -4,6 +4,7 @@ from PIL import Image
 import numpy as np
 import time
 import os
+import h5py
 
 # --- KONFIGURASI HALAMAN ---
 st.set_page_config(
@@ -103,6 +104,42 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- FUNGSI PEMBUATAN ARSITEKTUR MODEL ---
+def inject_dense_weights(model, h5_path, expected_in):
+    kernel_1 = None
+    bias_1 = None
+    kernel_2 = None
+    bias_2 = None
+    
+    with h5py.File(h5_path, 'r') as f:
+        g = f['model_weights'] if 'model_weights' in f else f
+        
+        def search_group(group):
+            nonlocal kernel_1, bias_1, kernel_2, bias_2
+            for k in group.keys():
+                item = group[k]
+                if isinstance(item, h5py.Group):
+                    search_group(item)
+                elif isinstance(item, h5py.Dataset):
+                    if item.shape == (expected_in, 128):
+                        kernel_1 = item[:]
+                        for sub_k in group.keys():
+                            if group[sub_k].shape == (128,):
+                                bias_1 = group[sub_k][:]
+                                break
+                    elif item.shape == (128, 3):
+                        kernel_2 = item[:]
+                        for sub_k in group.keys():
+                            if group[sub_k].shape == (3,):
+                                bias_2 = group[sub_k][:]
+                                break
+        
+        search_group(g)
+        
+    if kernel_1 is not None and bias_1 is not None:
+        model.layers[-2].set_weights([kernel_1, bias_1])
+    if kernel_2 is not None and bias_2 is not None:
+        model.layers[-1].set_weights([kernel_2, bias_2])
+
 def get_augmentation_layer():
     return tf.keras.Sequential([
         tf.keras.layers.RandomFlip("horizontal_and_vertical"),
@@ -124,10 +161,10 @@ def load_mobilenet_v3():
         x = tf.keras.layers.GlobalAveragePooling2D(name='global_average_pooling2d_1')(x)
         x = tf.keras.layers.Dense(128, activation='relu', name='dense_2')(x)
         x = tf.keras.layers.Dropout(0.3)(x)
-        outputs = tf.keras.layers.Dense(3, activation='softmax', name='dense_3')(x)
+        outputs = tf.keras.layers.Dense(3, activation='softmax')(x)
         
         model = tf.keras.Model(inputs, outputs, name="MobileNetV3_Large")
-        model.load_weights("models/best_mobilenet_pisang.h5", by_name=True, skip_mismatch=True)
+        inject_dense_weights(model, "models/best_mobilenet_pisang.h5", 960)
         return model, None
     except Exception as e:
         return None, str(e)
@@ -145,10 +182,10 @@ def load_convnext_tiny():
         x = tf.keras.layers.GlobalAveragePooling2D(name='global_average_pooling2d')(x)
         x = tf.keras.layers.Dense(128, activation='relu', name='dense')(x)
         x = tf.keras.layers.Dropout(0.3)(x)
-        outputs = tf.keras.layers.Dense(3, activation='softmax', name='dense_1')(x)
+        outputs = tf.keras.layers.Dense(3, activation='softmax')(x)
         
         model = tf.keras.Model(inputs, outputs, name="ConvNeXt_Tiny")
-        model.load_weights("models/best_convnext_pisang.h5", by_name=True, skip_mismatch=True)
+        inject_dense_weights(model, "models/best_convnext_pisang.h5", 768)
         return model, None
     except Exception as e:
         return None, str(e)
