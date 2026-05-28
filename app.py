@@ -260,24 +260,24 @@ if uploaded_file is not None:
                     color_class = get_color_class(class_name)
                     
                     st.markdown(f"""
-                    <div class="result-card">
-                        <div style="font-size: 14px; color: #94A3B8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px;">
-                            Model: {pilihan_model}
-                        </div>
-                        <div style="font-size: 16px; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">
-                            Status Kematangan
-                        </div>
-                        <div class="{color_class}">{format_label(class_name)}</div>
-                        
-                        <div style="margin-top: 30px; display: flex; justify-content: space-around;">
-                            <div>
-                                <div class="conf-label">Tingkat Kepercayaan</div>
-                                <div class="conf-value">{confidence:.2f}%</div>
-                            </div>
-                            <div>
-                                <div class="conf-label">Waktu Komputasi</div>
-                                <div class="conf-value">{calc_time:.3f} s</div>
-                            </div>
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
+<div class="result-card">
+    <div style="font-size: 14px; color: #94A3B8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px;">
+        Model: {pilihan_model}
+    </div>
+    <div style="font-size: 16px; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">
+        Status Kematangan
+    </div>
+    <div class="{color_class}">{format_label(class_name)}</div>
+    
+    <div style="margin-top: 30px; display: flex; justify-content: space-around;">
+        <div>
+            <div class="conf-label">Tingkat Kepercayaan</div>
+            <div class="conf-value">{confidence:.2f}%</div>
+        </div>
+        <div>
+            <div class="conf-label">Waktu Komputasi</div>
+            <div class="conf-value">{calc_time:.3f} s</div>
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
