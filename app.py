@@ -6,99 +6,151 @@ import time
 import os
 import h5py
 
-# --- KONFIGURASI HALAMAN ---
+# Konfigurasi Halaman
 st.set_page_config(
-    page_title="Banana Quality Classifier",
+    page_title="Sistem Deteksi Kematangan Pisang",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- CSS TEMA GELAP (GLASSMORPHISM) ---
-st.markdown("""
+# Custom CSS: Clean, White, Symmetrical, Centered Navbar
+css_kustom = """
 <style>
-    /* Global Styling */
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+    html, body, [class*="css"]  {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background-color: #FAFAFA;
+        color: #111827;
+    }
+    
     .stApp {
-        background: linear-gradient(135deg, #12141D 0%, #1A2035 100%);
-        color: #E2E8F0;
-        font-family: 'Inter', sans-serif;
+        background-color: #FAFAFA;
     }
-    
-    /* Typography */
-    h1, h2, h3 { 
-        text-align: center; 
-        font-weight: 800; 
-        color: #FFFFFF !important;
-        text-shadow: 0 0 20px rgba(255,255,255,0.1);
-    }
-    
-    .subtitle {
-        text-align: center;
-        color: #94A3B8;
-        font-size: 1.1rem;
+
+    /* TABS NAVBAR STYLING - CENTERED */
+    .stTabs [data-baseweb="tab-list"] {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        border-bottom: 1px solid #E5E7EB;
+        padding-bottom: 10px;
         margin-bottom: 2rem;
     }
     
-    /* Result Card (Glassmorphism) */
-    .result-card {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
-        padding: 30px;
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        white-space: pre-wrap;
+        background-color: transparent;
+        border-radius: 0px;
+        padding: 10px 15px;
+        color: #6B7280;
+        font-weight: 600;
+        font-size: 1.1rem;
+        border: none !important;
+        transition: all 0.3s;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        color: #111827 !important;
+        border-bottom: 3px solid #111827 !important;
+        background-color: transparent !important;
+    }
+
+    /* Card styling for modern white look */
+    .metric-card {
+        background-color: #FFFFFF;
+        color: #111827 !important;
+        border: 1px solid #E5E7EB;
+        border-radius: 12px;
+        padding: 32px 24px;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
         text-align: center;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        transition: transform 0.2s ease-in-out;
     }
     
-    /* Status Colors */
-    .status-mentah { 
-        color: #10B981; 
-        font-size: 36px; 
-        font-weight: 800; 
-        text-shadow: 0 0 15px rgba(16, 185, 129, 0.4); 
-    } 
-    .status-matang { 
-        color: #F59E0B; 
-        font-size: 36px; 
-        font-weight: 800; 
-        text-shadow: 0 0 15px rgba(245, 158, 11, 0.4); 
-    } 
-    .status-terlalu { 
-        color: #EF4444; 
-        font-size: 36px; 
-        font-weight: 800; 
-        text-shadow: 0 0 15px rgba(239, 68, 68, 0.4); 
-    } 
-    
-    .conf-label {
-        font-size: 14px;
-        color: #94A3B8;
-        margin-top: 10px;
-    }
-    
-    .conf-value {
-        font-size: 24px;
-        color: #FFFFFF;
-        font-weight: bold;
-    }
-    
-    /* Button Override */
-    .stButton>button {
-        width: 100%;
-        background: linear-gradient(90deg, #3B82F6 0%, #2563EB 100%);
-        color: white;
-        border: none;
-        padding: 12px;
+    .info-card {
+        background-color: #FFFFFF;
+        color: #111827 !important;
+        border: 1px solid #E5E7EB;
+        border-left: 4px solid #111827;
         border-radius: 8px;
-        font-weight: bold;
-        transition: all 0.3s ease;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     }
-    .stButton>button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+
+    h1, h2, h3, h4 {
+        color: #111827 !important;
+        font-weight: 700 !important;
+    }
+
+    .stButton > button {
+        background-color: #111827;
         color: white;
+        border-radius: 6px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        border: none;
+        width: 100%;
+        transition: all 0.3s;
+    }
+    
+    .stButton > button:hover {
+        background-color: #374151;
+        color: white;
+    }
+    
+    .status-mentah {
+        color: #065F46;
+        background-color: #D1FAE5;
+        padding: 6px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        display: inline-block;
+        border: 1px solid #A7F3D0;
+    }
+    
+    .status-matang {
+        color: #B45309;
+        background-color: #FEF3C7;
+        padding: 6px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        display: inline-block;
+        border: 1px solid #FDE68A;
+    }
+
+    .status-terlalu {
+        color: #991B1B;
+        background-color: #FEE2E2;
+        padding: 6px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        display: inline-block;
+        border: 1px solid #FECACA;
+    }
+    
+    hr {
+        border-color: #E5E7EB;
+        margin: 2rem 0;
+    }
+    
+    p, li {
+        font-size: 1.05rem;
+        line-height: 1.7;
+        color: #374151;
     }
 </style>
-""", unsafe_allow_html=True)
+"""
+st.markdown(css_kustom, unsafe_allow_html=True)
+
+# Konstanta
+UKURAN_INPUT = (224, 224)
+CLASS_NAMES = ['matang', 'mentah', 'terlalu_matang']
 
 # --- FUNGSI PEMBUATAN ARSITEKTUR MODEL ---
 def inject_dense_weights(model, h5_path, expected_in):
@@ -187,124 +239,170 @@ def load_convnext_tiny():
     except Exception as e:
         return None, str(e)
 
-# --- SIDEBAR ---
-with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/3014/3014491.png", width=100)
-    st.title("⚙️ Tentang Proyek")
-    st.markdown("Sistem berbasis *Deep Learning* ini mengkomparasikan dua arsitektur mutakhir untuk mengklasifikasikan pisang ke dalam tiga fase kematangan.")
-    st.markdown("---")
-    st.markdown("**1. ConvNeXt-Tiny**")
-    st.markdown("Arsitektur pure-convolutional modern (Akurasi Uji: 98%).")
-    st.markdown("**2. MobileNetV3-Large**")
-    st.markdown("Arsitektur super ringan & efisien (Akurasi Uji: 100%).")
-
-# Definisi Kelas
-CLASS_NAMES = ['matang', 'mentah', 'terlalu_matang']
-
 def preprocess_image(image):
-    img = image.resize((224, 224))
+    img = image.resize(UKURAN_INPUT)
     img_array = tf.keras.preprocessing.image.img_to_array(img)
     img_array = np.expand_dims(img_array, 0)
     return img_array
 
-def get_color_class(label):
-    if label == 'mentah': return 'status-mentah'
-    elif label == 'matang': return 'status-matang'
-    else: return 'status-terlalu'
+def format_hasil(class_name, confidence):
+    label = class_name.replace('_', ' ').title()
+    if class_name == 'mentah':
+        return label, confidence, 'status-mentah'
+    elif class_name == 'matang':
+        return label, confidence, 'status-matang'
+    else:
+        return label, confidence, 'status-terlalu'
 
-def format_label(label):
-    return label.replace('_', ' ').title()
+# HEADER
+st.markdown("<h1 style='text-align: center; margin-top: 1rem;'>Sistem Inspeksi Kematangan Pisang</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-size: 1.1rem; color: #6B7280; margin-bottom: 2rem;'>Sistem Otomatisasi Penilaian Kualitas Berbasis Deep Learning</p>", unsafe_allow_html=True)
 
-# --- HEADER UTAMA ---
-st.markdown("<h1>🍌 Banana Quality Classifier</h1>", unsafe_allow_html=True)
-st.markdown("<p class='subtitle'>Sistem Pintar Komparasi Model Kematangan Pisang Berbasis AI</p>", unsafe_allow_html=True)
-st.write("")
+# TABS NAVIGATION
+tab_prediksi, tab_dataset, tab_convnext, tab_mobilenet, tab_komparasi = st.tabs([
+    "Inspeksi Visual", 
+    "Metodologi & Dataset", 
+    "Analisis ConvNeXt-Tiny", 
+    "Analisis MobileNetV3",
+    "Komparasi Model"
+])
 
-# --- UPLOAD & PREVIEW ---
-uploaded_file = st.file_uploader("Upload Foto Pisang Anda (JPG/PNG)", type=["jpg", "jpeg", "png"])
-
-if uploaded_file is not None:
-    image = Image.open(uploaded_file).convert('RGB')
+# --- TAB 1: PREDIKSI ---
+with tab_prediksi:
+    st.markdown("<br>", unsafe_allow_html=True)
     
-    col_img, col_btn = st.columns([1, 2])
-    
-    with col_img:
-        st.image(image, use_column_width=True, caption="Citra Input (Real-Time)")
-        
-    with col_btn:
-        st.markdown("<br><br>", unsafe_allow_html=True)
-        if st.button("🔍 Mulai Prediksi Head-to-Head", use_container_width=True):
-            with st.spinner("Memproses melalui Neural Networks..."):
-                # Load both models
-                model_mobilenet, err_mob = load_mobilenet_v3()
-                model_convnext, err_conv = load_convnext_tiny()
+    model_mob, err_mob = load_mobilenet_v3()
+    model_conv, err_conv = load_convnext_tiny()
+
+    if model_mob is None or model_conv is None:
+        st.warning("Peringatan: File bobot model belum terpasang dengan benar pada peladen (server).")
+    else:
+        kolom_kiri, kolom_tengah, kolom_kanan = st.columns([1, 2, 1])
+
+        with kolom_tengah:
+            st.markdown("<div class='info-card'><b>Instruksi Operasional:</b> Unggah citra sampel pisang dengan pencahayaan netral dan resolusi yang memadai untuk memperoleh hasil analisis komparatif.</div>", unsafe_allow_html=True)
+            berkas_unggah = st.file_uploader("Pilih file citra (Resolusi disarankan: > 500x500px)", type=['jpg', 'jpeg', 'png'], label_visibility="collapsed")
+            
+            if berkas_unggah is not None:
+                citra_asli = Image.open(berkas_unggah).convert('RGB')
+                st.image(citra_asli, caption="Citra Sampel Terunggah", use_container_width=True)
+                st.markdown("<br>", unsafe_allow_html=True)
+                tombol_prediksi = st.button("Lakukan Inspeksi Paralel")
+
+        if berkas_unggah is not None and 'tombol_prediksi' in locals() and tombol_prediksi:
+            st.markdown("<hr>", unsafe_allow_html=True)
+            st.markdown("<h2 style='text-align: center; margin-bottom: 2rem;'>Laporan Hasil Inspeksi Komparatif</h2>", unsafe_allow_html=True)
+            
+            with st.spinner("Mengeksekusi jaringan saraf tiruan secara paralel..."):
+                img_tensor = preprocess_image(citra_asli)
                 
-                if model_mobilenet is None or model_convnext is None:
-                    st.error(f"Sistem Gagal Memuat Model.")
-                else:
-                    img_tensor = preprocess_image(image)
-                    
-                    # ConvNeXt Prediction
-                    start_time = time.time()
-                    pred_c = model_convnext.predict(img_tensor, verbose=0)
-                    calc_time_c = time.time() - start_time
-                    class_c = CLASS_NAMES[np.argmax(pred_c[0])]
-                    conf_c = np.max(pred_c[0]) * 100
-                    color_c = get_color_class(class_c)
-                    
-                    # MobileNet Prediction
-                    start_time = time.time()
-                    pred_m = model_mobilenet.predict(img_tensor, verbose=0)
-                    calc_time_m = time.time() - start_time
-                    class_m = CLASS_NAMES[np.argmax(pred_m[0])]
-                    conf_m = np.max(pred_m[0]) * 100
-                    color_m = get_color_class(class_m)
-                    
-                    # Result Display
-                    col_res1, col_res2 = st.columns(2)
-                    
-                    with col_res1:
-                        st.markdown(f"""
-<div class="result-card">
-<div style="font-size: 14px; color: #94A3B8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px;">
-Model: ConvNeXt-Tiny
-</div>
-<div style="font-size: 16px; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">
-Status Kematangan
-</div>
-<div class="{color_c}">{format_label(class_c)}</div>
-<div style="margin-top: 30px; display: flex; justify-content: space-around;">
-<div>
-<div class="conf-label">Tingkat Kepercayaan</div>
-<div class="conf-value">{conf_c:.2f}%</div>
-</div>
-<div>
-<div class="conf-label">Waktu Komputasi</div>
-<div class="conf-value">{calc_time_c:.3f} s</div>
-</div>
-</div>
-</div>
-""", unsafe_allow_html=True)
+                # ConvNeXt
+                start_conv = time.time()
+                pred_c = model_conv.predict(img_tensor, verbose=0)
+                waktu_conv = time.time() - start_conv
+                class_c = CLASS_NAMES[np.argmax(pred_c[0])]
+                conf_c = np.max(pred_c[0]) * 100
+                
+                # MobileNet
+                start_mob = time.time()
+                pred_m = model_mob.predict(img_tensor, verbose=0)
+                waktu_mob = time.time() - start_mob
+                class_m = CLASS_NAMES[np.argmax(pred_m[0])]
+                conf_m = np.max(pred_m[0]) * 100
+                
+                kelas_conv, conf_conv, style_conv = format_hasil(class_c, conf_c)
+                kelas_mob, conf_mob, style_mob = format_hasil(class_m, conf_m)
 
-                    with col_res2:
-                        st.markdown(f"""
-<div class="result-card">
-<div style="font-size: 14px; color: #94A3B8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px;">
-Model: MobileNetV3-Large
-</div>
-<div style="font-size: 16px; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">
-Status Kematangan
-</div>
-<div class="{color_m}">{format_label(class_m)}</div>
-<div style="margin-top: 30px; display: flex; justify-content: space-around;">
-<div>
-<div class="conf-label">Tingkat Kepercayaan</div>
-<div class="conf-value">{conf_m:.2f}%</div>
-</div>
-<div>
-<div class="conf-label">Waktu Komputasi</div>
-<div class="conf-value">{calc_time_m:.3f} s</div>
-</div>
-</div>
-</div>
-""", unsafe_allow_html=True)
+                col_conv, col_mob = st.columns(2)
+                
+                with col_conv:
+                    st.markdown(f"""
+                    <div class='metric-card'>
+                        <h3 style='color: #374151; font-size: 1.2rem; margin-bottom: 1.5rem;'>Arsitektur ConvNeXt-Tiny</h3>
+                        <div style='margin-bottom: 2rem;'>
+                            <span class='{style_conv}'>{kelas_conv}</span>
+                        </div>
+                        <p style='margin: 0; font-size: 0.9rem; color: #6B7280;'>Tingkat Kepercayaan (Confidence)</p>
+                        <h2 style='margin: 0 0 1.5rem 0; color: #111827;'>{conf_conv:.2f}%</h2>
+                        <div style='background-color: #F3F4F6; padding: 10px; border-radius: 6px; display: inline-block;'>
+                            <span style='font-size: 0.85rem; color: #4B5563;'>Waktu Inferensi: <b>{waktu_conv:.3f} detik</b></span>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                with col_mob:
+                    st.markdown(f"""
+                    <div class='metric-card'>
+                        <h3 style='color: #374151; font-size: 1.2rem; margin-bottom: 1.5rem;'>Arsitektur MobileNetV3-Large</h3>
+                        <div style='margin-bottom: 2rem;'>
+                            <span class='{style_mob}'>{kelas_mob}</span>
+                        </div>
+                        <p style='margin: 0; font-size: 0.9rem; color: #6B7280;'>Tingkat Kepercayaan (Confidence)</p>
+                        <h2 style='margin: 0 0 1.5rem 0; color: #111827;'>{conf_mob:.2f}%</h2>
+                        <div style='background-color: #F3F4F6; padding: 10px; border-radius: 6px; display: inline-block;'>
+                            <span style='font-size: 0.85rem; color: #4B5563;'>Waktu Inferensi: <b>{waktu_mob:.3f} detik</b></span>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+            st.markdown("<br><p style='text-align: center; font-size: 0.95rem; color: #6B7280;'>Laporan di atas merupakan evaluasi komparatif antara dua model Deep Learning mutakhir.</p>", unsafe_allow_html=True)
+
+# --- TAB 2: METODOLOGI & DATASET ---
+with tab_dataset:
+    st.markdown("<div style='padding: 1rem 3rem;'>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center;'>Metodologi & Manajemen Dataset</h2>", unsafe_allow_html=True)
+    st.markdown("<hr>", unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    col_data1, col_data2 = st.columns(2)
+    with col_data1:
+        st.markdown("### Proporsi Dataset")
+        st.markdown("""
+        Penelitian ini menggunakan dataset citra pisang yang terbagi menjadi 3 kelas utama: **Mentah (Green)**, **Matang (Yellow)**, dan **Terlalu Matang (Spotted/Brown)**. Dataset dibagi untuk menghindari kebocoran data (*data leakage*):
+        
+        *   **Data Latih (Training)** - Digunakan sebagai materi dasar pembelajaran mesin.
+        *   **Data Validasi (Validation)** - Digunakan untuk evaluasi objektif secara berkala untuk mendeteksi *overfitting*.
+        """)
+    
+    with col_data2:
+        st.markdown("### Konfigurasi Pelatihan Dasar")
+        st.markdown("""
+        *   **Metode Pembelajaran**: Transfer Learning & Fine-Tuning
+        *   **Fungsi Kerugian**: Categorical Crossentropy
+        *   **Pengoptimal**: AdamW & Nadam
+        *   **Augmentasi Data (On-The-Fly)**: Rotasi, *zoom*, kontras, dan pembalikan horizontal (*horizontal flip*) diintegrasikan di dalam layer model (kebal pergeseran letak).
+        """)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# --- TAB 3: CONVNEXT ---
+with tab_convnext:
+    st.markdown("<div style='padding: 1rem 3rem;'>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center;'>Analisis Kinerja ConvNeXt-Tiny</h2>", unsafe_allow_html=True)
+    st.markdown("<hr>", unsafe_allow_html=True)
+    
+    st.markdown("""
+    ConvNeXt adalah arsitektur pure-convolutional modern yang diadaptasi dengan strategi pelatihan Vision Transformers (ViT). Model ini mencapai akurasi uji sebesar **98%** dengan detail fitur ekstraksi yang mendalam.
+    """)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# --- TAB 4: MOBILENET ---
+with tab_mobilenet:
+    st.markdown("<div style='padding: 1rem 3rem;'>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center;'>Analisis Kinerja MobileNetV3-Large</h2>", unsafe_allow_html=True)
+    st.markdown("<hr>", unsafe_allow_html=True)
+    
+    st.markdown("""
+    MobileNetV3 dirancang khusus menggunakan teknik Hardware-Aware Network Architecture Search (NAS). Memiliki kecepatan inferensi ultra-cepat, model ini mempertahankan akurasi hingga **100%** di dataset uji.
+    """)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# --- TAB 5: KOMPARASI METRIK ---
+with tab_komparasi:
+    st.markdown("<div style='padding: 1rem 3rem;'>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center;'>Komparasi Metrik Kinerja Model</h2>", unsafe_allow_html=True)
+    st.markdown("<hr>", unsafe_allow_html=True)
+    
+    st.markdown("""
+    Secara keseluruhan, **MobileNetV3-Large** menunjukkan performa yang sedikit lebih superior dengan waktu latensi yang lebih rendah, sementara **ConvNeXt-Tiny** memberikan kestabilan ekstraksi fitur untuk citra yang sangat kompleks.
+    """)
+    st.markdown("</div>", unsafe_allow_html=True)
