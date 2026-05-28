@@ -266,47 +266,45 @@ if uploaded_file is not None:
                     with col_res1:
                         st.markdown(f"""
 <div class="result-card">
-    <div style="font-size: 14px; color: #94A3B8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px;">
-        Model: ConvNeXt-Tiny
-    </div>
-    <div style="font-size: 16px; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">
-        Status Kematangan
-    </div>
-    <div class="{color_c}">{format_label(class_c)}</div>
-    
-    <div style="margin-top: 30px; display: flex; justify-content: space-around;">
-        <div>
-            <div class="conf-label">Tingkat Kepercayaan</div>
-            <div class="conf-value">{conf_c:.2f}%</div>
-        </div>
-        <div>
-            <div class="conf-label">Waktu Komputasi</div>
-            <div class="conf-value">{calc_time_c:.3f} s</div>
-        </div>
-    </div>
+<div style="font-size: 14px; color: #94A3B8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px;">
+Model: ConvNeXt-Tiny
+</div>
+<div style="font-size: 16px; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">
+Status Kematangan
+</div>
+<div class="{color_c}">{format_label(class_c)}</div>
+<div style="margin-top: 30px; display: flex; justify-content: space-around;">
+<div>
+<div class="conf-label">Tingkat Kepercayaan</div>
+<div class="conf-value">{conf_c:.2f}%</div>
+</div>
+<div>
+<div class="conf-label">Waktu Komputasi</div>
+<div class="conf-value">{calc_time_c:.3f} s</div>
+</div>
+</div>
 </div>
 """, unsafe_allow_html=True)
 
                     with col_res2:
                         st.markdown(f"""
 <div class="result-card">
-    <div style="font-size: 14px; color: #94A3B8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px;">
-        Model: MobileNetV3-Large
-    </div>
-    <div style="font-size: 16px; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">
-        Status Kematangan
-    </div>
-    <div class="{color_m}">{format_label(class_m)}</div>
-    
-    <div style="margin-top: 30px; display: flex; justify-content: space-around;">
-        <div>
-            <div class="conf-label">Tingkat Kepercayaan</div>
-            <div class="conf-value">{conf_m:.2f}%</div>
-        </div>
-        <div>
-            <div class="conf-label">Waktu Komputasi</div>
-            <div class="conf-value">{calc_time_m:.3f} s</div>
-        </div>
-    </div>
+<div style="font-size: 14px; color: #94A3B8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px;">
+Model: MobileNetV3-Large
+</div>
+<div style="font-size: 16px; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">
+Status Kematangan
+</div>
+<div class="{color_m}">{format_label(class_m)}</div>
+<div style="margin-top: 30px; display: flex; justify-content: space-around;">
+<div>
+<div class="conf-label">Tingkat Kepercayaan</div>
+<div class="conf-value">{conf_m:.2f}%</div>
+</div>
+<div>
+<div class="conf-label">Waktu Komputasi</div>
+<div class="conf-value">{calc_time_m:.3f} s</div>
+</div>
+</div>
 </div>
 """, unsafe_allow_html=True)
