@@ -190,17 +190,13 @@ def load_convnext_tiny():
 # --- SIDEBAR ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/3014/3014491.png", width=100)
-    st.title("⚙️ Pengaturan Sistem")
-    st.markdown("Pilih arsitektur jaringan saraf tiruan (ANN) yang akan digunakan untuk ekstraksi fitur citra.")
-    
-    pilihan_model = st.selectbox(
-        "Pilih Arsitektur Model",
-        ('MobileNetV3-Large', 'ConvNeXt-Tiny')
-    )
-    
+    st.title("⚙️ Tentang Proyek")
+    st.markdown("Sistem berbasis *Deep Learning* ini mengkomparasikan dua arsitektur mutakhir untuk mengklasifikasikan pisang ke dalam tiga fase kematangan.")
     st.markdown("---")
-    st.markdown("### Tentang Proyek")
-    st.markdown("Sistem berbasis *Deep Learning* ini mengklasifikasikan pisang ke dalam tiga fase kematangan dengan akurasi 100%.")
+    st.markdown("**1. ConvNeXt-Tiny**")
+    st.markdown("Arsitektur pure-convolutional modern (Akurasi Uji: 98%).")
+    st.markdown("**2. MobileNetV3-Large**")
+    st.markdown("Arsitektur super ringan & efisien (Akurasi Uji: 100%).")
 
 # Definisi Kelas
 CLASS_NAMES = ['matang', 'mentah', 'terlalu_matang']
@@ -221,7 +217,7 @@ def format_label(label):
 
 # --- HEADER UTAMA ---
 st.markdown("<h1>🍌 Banana Quality Classifier</h1>", unsafe_allow_html=True)
-st.markdown("<p class='subtitle'>Sistem Pintar Analisis Kematangan Pisang Berbasis AI</p>", unsafe_allow_html=True)
+st.markdown("<p class='subtitle'>Sistem Pintar Komparasi Model Kematangan Pisang Berbasis AI</p>", unsafe_allow_html=True)
 st.write("")
 
 # --- UPLOAD & PREVIEW ---
@@ -230,53 +226,86 @@ uploaded_file = st.file_uploader("Upload Foto Pisang Anda (JPG/PNG)", type=["jpg
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert('RGB')
     
-    col1, col2 = st.columns([1, 1])
+    col_img, col_btn = st.columns([1, 2])
     
-    with col1:
+    with col_img:
         st.image(image, use_column_width=True, caption="Citra Input (Real-Time)")
         
-    with col2:
+    with col_btn:
         st.markdown("<br><br>", unsafe_allow_html=True)
-        if st.button("🔍 Analisis Kematangan Pisang", use_container_width=True):
+        if st.button("🔍 Mulai Prediksi Head-to-Head", use_container_width=True):
             with st.spinner("Memproses melalui Neural Networks..."):
-                # Load selected model
-                if pilihan_model == 'MobileNetV3-Large':
-                    model, err = load_mobilenet_v3()
-                else:
-                    model, err = load_convnext_tiny()
-                    
-                if model is None:
-                    st.error(f"Sistem Gagal Memuat Model: {err}")
+                # Load both models
+                model_mobilenet, err_mob = load_mobilenet_v3()
+                model_convnext, err_conv = load_convnext_tiny()
+                
+                if model_mobilenet is None or model_convnext is None:
+                    st.error(f"Sistem Gagal Memuat Model.")
                 else:
                     img_tensor = preprocess_image(image)
+                    
+                    # ConvNeXt Prediction
                     start_time = time.time()
-                    pred = model.predict(img_tensor, verbose=0)
-                    calc_time = time.time() - start_time
+                    pred_c = model_convnext.predict(img_tensor, verbose=0)
+                    calc_time_c = time.time() - start_time
+                    class_c = CLASS_NAMES[np.argmax(pred_c[0])]
+                    conf_c = np.max(pred_c[0]) * 100
+                    color_c = get_color_class(class_c)
                     
-                    class_idx = np.argmax(pred[0])
-                    class_name = CLASS_NAMES[class_idx]
-                    confidence = np.max(pred[0]) * 100
+                    # MobileNet Prediction
+                    start_time = time.time()
+                    pred_m = model_mobilenet.predict(img_tensor, verbose=0)
+                    calc_time_m = time.time() - start_time
+                    class_m = CLASS_NAMES[np.argmax(pred_m[0])]
+                    conf_m = np.max(pred_m[0]) * 100
+                    color_m = get_color_class(class_m)
                     
-                    color_class = get_color_class(class_name)
+                    # Result Display
+                    col_res1, col_res2 = st.columns(2)
                     
-                    st.markdown(f"""
+                    with col_res1:
+                        st.markdown(f"""
 <div class="result-card">
     <div style="font-size: 14px; color: #94A3B8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px;">
-        Model: {pilihan_model}
+        Model: ConvNeXt-Tiny
     </div>
     <div style="font-size: 16px; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">
         Status Kematangan
     </div>
-    <div class="{color_class}">{format_label(class_name)}</div>
+    <div class="{color_c}">{format_label(class_c)}</div>
     
     <div style="margin-top: 30px; display: flex; justify-content: space-around;">
         <div>
             <div class="conf-label">Tingkat Kepercayaan</div>
-            <div class="conf-value">{confidence:.2f}%</div>
+            <div class="conf-value">{conf_c:.2f}%</div>
         </div>
         <div>
             <div class="conf-label">Waktu Komputasi</div>
-            <div class="conf-value">{calc_time:.3f} s</div>
+            <div class="conf-value">{calc_time_c:.3f} s</div>
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+                    with col_res2:
+                        st.markdown(f"""
+<div class="result-card">
+    <div style="font-size: 14px; color: #94A3B8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px;">
+        Model: MobileNetV3-Large
+    </div>
+    <div style="font-size: 16px; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">
+        Status Kematangan
+    </div>
+    <div class="{color_m}">{format_label(class_m)}</div>
+    
+    <div style="margin-top: 30px; display: flex; justify-content: space-around;">
+        <div>
+            <div class="conf-label">Tingkat Kepercayaan</div>
+            <div class="conf-value">{conf_m:.2f}%</div>
+        </div>
+        <div>
+            <div class="conf-label">Waktu Komputasi</div>
+            <div class="conf-value">{calc_time_m:.3f} s</div>
         </div>
     </div>
 </div>
