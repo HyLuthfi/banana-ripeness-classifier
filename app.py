@@ -3,16 +3,16 @@ import tensorflow as tf
 from PIL import Image
 import numpy as np
 import time
+import os
 
 # --- KONFIGURASI HALAMAN ---
 st.set_page_config(
-    page_title="Banana Quality AI",
-    page_icon="🍌",
+    page_title="Banana Quality Classifier",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- CSS TEMA PUTIH & SIMETRIS ---
+# --- CSS TEMA PUTIH & SIMETRIS (TANPA EMOJI) ---
 st.markdown("""
 <style>
     /* Global Styling */
@@ -48,9 +48,9 @@ st.markdown("""
         border-radius: 8px 8px 0 0;
     }
     .stTabs [aria-selected="true"] {
-        color: #2563EB !important;
-        border-bottom: 3px solid #2563EB !important;
-        background-color: rgba(37, 99, 235, 0.05);
+        color: #111827 !important;
+        border-bottom: 3px solid #111827 !important;
+        background-color: #F9FAFB;
     }
     
     /* Metric Cards */
@@ -87,15 +87,9 @@ st.markdown("""
     }
     
     /* Status Colors */
-    .status-mentah { color: #16A34A; } /* Green */
-    .status-matang { color: #D97706; } /* Yellow/Orange */
-    .status-terlalu { color: #DC2626; } /* Red */
-    
-    /* Upload Box */
-    .stFileUploader {
-        max-width: 500px;
-        margin: 0 auto;
-    }
+    .status-mentah { color: #16A34A; } 
+    .status-matang { color: #D97706; } 
+    .status-terlalu { color: #DC2626; } 
     
     /* Image Display */
     .uploaded-image {
@@ -109,7 +103,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- FUNGSI PEMBUATAN ARSITEKTUR MODEL ---
-# Membangun ulang arsitektur persis seperti di Jupyter Notebook
 def get_augmentation_layer():
     return tf.keras.Sequential([
         tf.keras.layers.RandomFlip("horizontal_and_vertical"),
@@ -134,9 +127,9 @@ def load_mobilenet_v3():
         
         model = tf.keras.Model(inputs, outputs)
         model.load_weights("models/best_mobilenet_pisang.h5")
-        return model
+        return model, None
     except Exception as e:
-        return None
+        return None, str(e)
 
 @st.cache_resource
 def load_convnext_tiny():
@@ -154,13 +147,13 @@ def load_convnext_tiny():
         
         model = tf.keras.Model(inputs, outputs)
         model.load_weights("models/best_convnext_pisang.h5")
-        return model
+        return model, None
     except Exception as e:
-        return None
+        return None, str(e)
 
 # Inisialisasi Model
-model_mobilenet = load_mobilenet_v3()
-model_convnext = load_convnext_tiny()
+model_mobilenet, err_mob = load_mobilenet_v3()
+model_convnext, err_conv = load_convnext_tiny()
 
 # Definisi Kelas
 CLASS_NAMES = ['matang', 'mentah', 'terlalu_matang']
@@ -180,11 +173,11 @@ def format_label(label):
     return label.replace('_', ' ').title()
 
 # --- HEADER UTAMA ---
-st.markdown("<h1>🍌 Banana Quality Classifier</h1>", unsafe_allow_html=True)
+st.markdown("<h1>Banana Quality Classifier</h1>", unsafe_allow_html=True)
 st.markdown("<p class='subtitle'>Analisis Kematangan Pisang Otomatis Berbasis Deep Learning</p>", unsafe_allow_html=True)
 
 # --- NAVIGASI TABS ---
-tab_predict, tab_method = st.tabs(["🔍 Prediksi Head-to-Head", "📚 Metodologi Riset"])
+tab_predict, tab_method = st.tabs(["Prediksi Head-to-Head", "Metodologi Riset"])
 
 with tab_predict:
     st.write("") # Spacer
@@ -200,7 +193,10 @@ with tab_predict:
         with col_res:
             st.markdown("<br>", unsafe_allow_html=True)
             if model_mobilenet is None or model_convnext is None:
-                st.error("⚠️ File model (.h5) tidak ditemukan di folder 'models/'. Harap pastikan model sudah diunduh dari Kaggle.")
+                st.error("Sistem Gagal Memuat Model.")
+                if err_mob: st.code(f"Error MobileNet: {err_mob}")
+                if err_conv: st.code(f"Error ConvNeXt: {err_conv}")
+                st.info("Penyebab Umum: File .h5 rusak (LFS pointer issue di Streamlit Cloud) atau versi TensorFlow tidak cocok.")
             else:
                 with st.spinner("Memproses melalui Neural Networks..."):
                     img_tensor = preprocess_image(image)
@@ -246,20 +242,18 @@ with tab_predict:
 
 with tab_method:
     st.markdown("""
-    ### 🔬 Arsitektur Neural Network
-    Proyek ini mengkomparasikan dua arsitektur mutakhir dalam *Computer Vision*:
+    ### Arsitektur Neural Network
+    Proyek ini mengkomparasikan dua arsitektur mutakhir dalam Computer Vision:
     
-    1. **ConvNeXt-Tiny**: Arsitektur *pure-convolutional* modern yang dioptimalkan dengan teknik *training* ala Vision Transformers (ViT). Memiliki parameter yang cukup ringan namun performa sangat kompetitif.
-    2. **MobileNetV3-Large**: Arsitektur ringan yang didesain menggunakan *Hardware-Aware Network Architecture Search* (NAS). Sangat efisien untuk *deployment* di perangkat berspesifikasi rendah dengan latensi minimal.
+    1. **ConvNeXt-Tiny**: Arsitektur pure-convolutional modern yang dioptimalkan dengan teknik training ala Vision Transformers (ViT). Memiliki parameter yang cukup ringan namun performa sangat kompetitif.
+    2. **MobileNetV3-Large**: Arsitektur ringan yang didesain menggunakan Hardware-Aware Network Architecture Search (NAS). Sangat efisien untuk deployment di perangkat berspesifikasi rendah dengan latensi minimal.
     
-    ### 📊 Skema Dataset & Augmentasi
+    ### Skema Dataset & Augmentasi
     - Dataset terdiri dari tiga kelas: **Mentah (Green)**, **Matang (Yellow)**, dan **Terlalu Matang (Spotted/Brown)**.
-    - Menggunakan teknik **On-The-Fly Data Augmentation** (Random Flip, Rotation, Zoom, Contrast) sebagai lapisan *layer* pertama dalam model untuk memastikan AI kebal terhadap variasi *background* dan posisi objek.
+    - Menggunakan teknik **On-The-Fly Data Augmentation** (Random Flip, Rotation, Zoom, Contrast) sebagai lapisan layer pertama dalam model untuk memastikan AI kebal terhadap variasi background dan posisi objek.
     
-    ### 🏆 Evaluasi (Berdasarkan Uji Kaggle)
+    ### Evaluasi (Berdasarkan Uji Validasi)
     - **ConvNeXt-Tiny**: Akurasi **98%**
     - **MobileNetV3-Large**: Akurasi **100%**
-    - Kedua model berhasil mendeteksi fitur visual kematangan pisang dengan *recall* dan *precision* di atas 0.95 pada setiap kelas.
+    - Kedua model berhasil mendeteksi fitur visual kematangan pisang dengan recall dan precision di atas 0.95 pada setiap kelas.
     """)
-    
-    st.info("💡 **Catatan:** Model yang digunakan pada *deployment* ini berjalan secara *offline* di CPU. MobileNetV3 umumnya menunjukkan *inference time* yang lebih cepat dibandingkan ConvNeXt pada lingkungan tanpa GPU.")
