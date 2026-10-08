@@ -1,0 +1,63 @@
+direction: right
+
+input_layer: Input & Preprocessing {
+  shape: package
+  style.fill: "#1e1e2e"
+  style.stroke: "#f9e2af"
+
+  raw_image: Input Image (224x224 RGB) {
+    shape: rectangle
+  }
+  augmentation: On-the-Fly Augmentation {
+    shape: rectangle
+    tooltip: "RandomFlip, RandomRotation(0.2), RandomZoom(0.2)"
+  }
+  raw_image -> augmentation: Stream Tensor
+}
+
+models_layer: Dual Transfer Learning Backbones {
+  shape: package
+  style.fill: "#181825"
+  style.stroke: "#89b4fa"
+
+  convnext: ConvNeXt-Tiny Engine {
+    shape: rectangle
+    backbone: "Backbone: 768-dim Features"
+    head: "Dense(256) + Softmax(3)"
+    acc: "Val Accuracy: 98.00%"
+  }
+
+  mobilenet: MobileNetV3-Large Engine {
+    shape: rectangle
+    backbone: "Backbone: 960-dim Features"
+    head: "Dense(256) + Softmax(3)"
+    acc: "Val Accuracy: 100.00%"
+  }
+}
+
+comparator: Head-to-Head Comparator {
+  shape: hexagon
+  style.fill: "#1e1e2e"
+  style.stroke: "#a6e3a1"
+  label: "Decision & Confidence Engine"
+}
+
+output_layer: Streamlit UI & Visual Analytics {
+  shape: package
+  style.fill: "#11111b"
+  style.stroke: "#cba6f7"
+
+  predict_tab: "Tab 1: Live Dual Inference"
+  dataset_tab: "Tab 2: Augmentation Inspector"
+  eval_tab: "Tab 3-5: Confusion Matrix & Metrics"
+}
+
+# Routing Connections
+input_layer.augmentation -> models_layer.convnext: Normalized Batch
+input_layer.augmentation -> models_layer.mobilenet: Normalized Batch
+
+models_layer.convnext -> comparator: Logits & Confidence
+models_layer.mobilenet -> comparator: Logits & Confidence
+
+comparator -> output_layer.predict_tab: Winner & Class Probabilities
+comparator -> output_layer.eval_tab: Performance Telemetry
